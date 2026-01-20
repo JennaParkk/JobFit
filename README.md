@@ -4,8 +4,6 @@ JobFit is a lightweight analysis tool that compares a job description with a res
 
 Instead of relying only on keyword overlap, JobFit combines semantic similarity, skill-level matching, and structured LLM reasoning to surface meaningful strengths and gaps.
 
----
-
 ## Core Ideas & Design Decisions
 
 ### 1. Semantic similarity beyond keywords
@@ -17,8 +15,6 @@ Computes embeddings for:
 Cosine similarity is used to measure how closely the *meaning* of the two texts align, even when exact keywords differ.
 
 This helps capture real relevance that keyword matching often misses.
-
----
 
 ### 2. Skill matching as a separate, interpretable signal
 
@@ -33,8 +29,6 @@ This produces:
 - preferred skill match score
 - explicit lists of missing skills
 
----
-
 ### 3. Weighted scoring instead of a single opaque number
 
 Computes multiple signals before producing a final score:
@@ -45,8 +39,6 @@ Computes multiple signals before producing a final score:
 
 This design allows future tuning and avoids hiding logic behind a single metric.
 
----
-
 ### 4. Structured LLM summaries for human-readable insight
 
 After numeric scoring, generates a structured summary including:
@@ -56,8 +48,6 @@ After numeric scoring, generates a structured summary including:
 
 The output is JSON-based to support future visualization and recommendation features.
 
----
-
 ## Current Features
 
 - Semantic similarity using text embeddings
@@ -66,8 +56,6 @@ The output is JSON-based to support future visualization and recommendation feat
 - Weighted match score
 - AI-generated summary (strengths, gaps, overall fit)
 - Modular backend architecture
-
----
 
 ## Tech Stack
 
@@ -79,29 +67,30 @@ The output is JSON-based to support future visualization and recommendation feat
 - Tailwind CSS
 - PDF parsing for resume ingestion
 
----
-
 ## Project Structure (Simplified)
 
+```
 src/
 ├── app/
-│   ├── api/analyze/route.ts   # analysis pipeline
-│   ├── analyze/               # JD + resume input
-│   └── result/                # result visualization
+│   ├── api/
+│   │   └── analyze/
+│   │       └── route.ts        # End-to-end analysis pipeline
+│   ├── analyze/                # JD + resume input UI
+│   └── result/                 # Result visualization UI
 ├── lib/
-│   ├── embeddings.ts          # embedding utilities
-│   ├── similarity.ts          # cosine similarity helpers
-│   └── weightedScore.ts       # scoring logic
+│   ├── embeddings.ts           # Embedding utilities
+│   ├── similarity.ts           # Cosine similarity helpers
+│   └── weightedScore.ts        # Scoring & weighting logic
 ├── services/
-│   ├── jdAnalyzer.ts          # JD skill extraction
-│   ├── resumeAnalyzer.ts      # resume skill extraction
-│   └── summary.ts             # AI summary generation
+│   ├── jdAnalyzer.ts           # JD skill extraction (LLM)
+│   ├── resumeAnalyzer.ts       # Resume skill extraction (LLM)
+│   └── summary.ts              # AI-generated fit summary
+```
 
-## To be Added 
+## To be Added
 
 - Skill importance weighting from job descriptions
 - Gap severity ranking
 - Resume tailoring recommendations
 - Interactive skill coverage visualizations
 - Persisting embeddings for faster comparisons
-
