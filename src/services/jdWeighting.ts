@@ -99,7 +99,24 @@ export async function extractWeightedSkillsFromJD(
         - If mentioned in the first 20% of the JD -> +0.2
         - If mentioned more than once -> +0.1
         - If described as "preferred", "nice to have", "bonus" -> -0.2
-        - Clamp importance to [0.1, 1.0]    
+        - Clamp importance to [0.1, 1.0]
+
+    EXAMPLES:
+    - "Must have 5+ years of React experience" 
+    → name: "React", importance: 0.9, reason: "Must have + years specified"
+    
+    - "Nice to have: AWS experience"
+    → name: "AWS", importance: 0.4, reason: "Nice to have"
+    
+    - "TypeScript" (mentioned once, middle of JD)
+    → name: "TypeScript", importance: 0.5, reason: "Mentioned once"
+    
+        
+    SKILL NORMALIZATION:
+    - Treat "React", "ReactJS", "React.js" as the same skill
+    - Use the most common name (e.g., "React" not "ReactJS")
+    - If same skill appears as both required and preferred, use the higher importance
+
 
     RETURN ONLY VALID JSON EXACTLY IN THE FOLLOWING FORMAT:
     {
