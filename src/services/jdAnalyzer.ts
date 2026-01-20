@@ -18,9 +18,19 @@ export async function extractSkillsFromJD(jdText: string): Promise<JDAnalysis> {
     Rules:
     - Output ONLY skill names (1-3 words).
     - No duplicates (case insensitive).
-    - Prefer concrete tecnologies over categories.
+    - Prefer concrete technologies over categories.
     - Do NOT include vague categories like "programming languages" or "frameworks".
-    - If a category is mentioned, infer likely concrete skills ONLY if explicitly listed ((e.g., "automation tools such as Selenium" -> "Selenium").
+    - Extract ONLY explicitly mentioned skills
+    - If category appears with examples (e.g., "frameworks like React, Vue"), extract the examples only
+    - Do NOT infer or assume unlisted skills
+
+    LEVEL DETECTION RULES:
+    - "intern" or "entry-level" → intern
+    - "0-2 years" or "junior" → junior  
+    - "2-5 years" or "mid-level" → mid
+    - "5+ years" or "senior" → senior
+    - "lead", "principal", "staff" → lead
+    - If unclear, default to "mid"
 
     Return ONLY valid JSON with EXACT keys:
    {
