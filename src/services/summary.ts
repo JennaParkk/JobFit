@@ -1,5 +1,4 @@
 import { openai } from "@/services/openaiClient";
-import { parseLiteralDef } from "openai/_vendor/zod-to-json-schema/index.mjs";
 
 export type aiSummaryResult = {
     strengths: string[];
@@ -12,26 +11,42 @@ export async function generateSummary (
     resumeText: string
 ): Promise<aiSummaryResult> {
     const prompt = `
-    You are an assistant summarizing how well this candidate matches the job description.
-    Focus on key strengths, gaps, and overall fit.
+    You are a technical recruiter analyzing candidate fit for a role. 
+
+    Given the job description and resume, analyze:
+    STRENGTHS (what makes this candidate a good fit):
+    - Required skills they possess
+    - Relevant experience level
+    - Industry/domain match
+    - Notable achievements that align with role
+
+    GAPS (what's missing or weak):
+    - Required skills they lack
+    - Experience level mismatch
+    - Missing qualifications
+    - Areas where they're underqualified
+
+    OVERALL FIT:
+    - One sentence (max 20 words) summarizing match quality
+
+    RULES:
+    - Each bullet: max 10 words, actionable and specific
+    - Prioritize REQUIRED skills over preferred
+    - Be objective, not overly positive or negative
+    - Focus on technical fit, not soft skills
     
     Given the job description and the resume below, return ONLY valid JSON with the following structure:
     {
-        "strengths": ["short bullet point 1", "short bullet point 2", ...],
-        "gaps": ["short bullet point 1", "short bullet point 2", ...],
-        "overallFit": "short phrase summarizing overall fit"
+        "strengths": ["specific strength 1", "specific strength 2"],
+        "gaps": ["specific gap 1", "specific gap 2"],
+        "overallFit": "one sentence summary"
     }
 
-    Rules: 
-    - Each bullet point should be concise (max 10 words).
-    - No markdown
-    - No explanations outside JSON
-
     Job Description:
-    ${jdText}
+    ${jdText.slice(0, 3000)}
 
     Resume:
-    ${resumeText}
+    ${resumeText.slice(0, 3000)}
     `.trim();
 
     try {

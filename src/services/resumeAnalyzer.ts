@@ -11,13 +11,20 @@ export async function extractSkillsFromResume(resumeText: string): Promise<Resum
     From the following resume text, extract:
     - skills: a list of technical skills (languages, frameworks, tools, etc.)
 
-    Rules:
-    - Short skill names only (1-3 words)
-    - No explanations
-    - No duplicates
-    - Use common industry names
-    - Do NOT include vague categories like "programming languages" or "frameworks"
-    - Look for skills in BOTH the skills section and project/experience descriptions.
+    EXTRACTION RULES:
+    1. Look in ALL sections (Skills, Experience, Projects, Education)
+    2. Prioritize:
+    - Skills explicitly listed in "Skills" or "Technical Skills" section
+    - Technologies mentioned in project descriptions
+    - Tools mentioned in work experience
+    3. Short names only (1-3 words): "React" not "React framework"
+    4. Use industry-standard names: "JavaScript" not "JS", "PostgreSQL" not "Postgres"
+    5. NO vague categories: Don't include "databases", "frontend frameworks"
+    6. NO soft skills: Don't include "leadership", "communication"
+
+    EXAMPLES:
+    Good: "Python", "Docker", "AWS", "React", "PostgreSQL"
+    Bad: "programming languages", "cloud platforms", "teamwork"
 
     Return ONLY valid JSON with this exact shape:
     {
