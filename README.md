@@ -1,8 +1,9 @@
 # JobFit — Semantic Job Description & Resume Matching
 
-JobFit is a lightweight analysis tool that compares a job description with a resume to estimate how well a candidate matches a role.
+JobFit is a semantic matching tool designed to help early-career candidates understand how well their resume aligns with a specific job description and what to improve next.
 
 Instead of relying only on keyword overlap, JobFit combines semantic similarity, skill-level matching, and structured LLM reasoning to surface meaningful strengths and gaps.
+
 
 ## Core Ideas & Design Decisions
 
