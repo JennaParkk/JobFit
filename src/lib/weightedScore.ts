@@ -20,10 +20,21 @@ export function normalizeSkill(skill: string): string {
         "c c++": "c++",
         "c/c++": "c++",
         "devops": "dev ops",
-        "SQL": "sql",
         "no sql": "nosql",
         "mongo db": "mongodb",
         "postgre sql": "postgresql",
+        "k8s": "kubernetes",
+        "tf": "terraform",
+        "py": "python",
+        "golang": "go",
+        "rest api": "rest",
+        "restful": "rest",
+        "ml": "machine learning",
+        "ai": "artificial intelligence",
+        "nlp": "natural language processing",
+        "ci cd": "continuous integration continuous deployment",
+        "next": "nextjs",
+        "next.js": "nextjs",
     };
 
     return aliases[base] ?? base;
