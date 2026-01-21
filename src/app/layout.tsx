@@ -26,21 +26,29 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        style={{ backgroundColor: "var(--background)", color: "var(--foreground)" }}
       >
-        <header className="border-b">
-    <div className="mx-auto flex max-w-3xl items-center justify-between p-4">
-      <a href="/" className="font-semibold">
-        JobFit
-      </a>
-      <nav className="text-sm">
-        <a className="underline" href="/analyze">
-          Analyze
-        </a>
-      </nav>
-    </div>
-  </header>
+        <header
+          className="border-b"
+          style={{ borderColor: "var(--border)" }}
+        >
+          <div className="mx-auto flex max-w-3xl items-center justify-between p-4">
+            <a href="/" className="font-semibold" style={{ color: "var(--foreground)" }}>
+              JobFit
+            </a>
+            <nav className="text-sm">
+              <a
+                className="underline"
+                style={{ color: "var(--accent)" }}
+                href="/analyze"
+              >
+                Analyze
+              </a>
+            </nav>
+          </div>
+        </header>
 
-  <div className="mx-auto max-w-6xl p-6">{children}</div>
+        <div className="mx-auto max-w-6xl p-6">{children}</div>
       </body>
     </html>
   );
