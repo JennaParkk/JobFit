@@ -22,13 +22,15 @@ export default function AnalyzePage() {
         Submit a job description and resume to see your match breakdown.
       </p>
 
-      <div className="mt-6 space-y-6">
-        <JDInput value={jdText} onChange={setJdText} />
-        <ResumeUploader file={resumeFile} onChange={setResumeFile} />
+      <div className="mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <JDInput value={jdText} onChange={setJdText} />
+          <ResumeUploader file={resumeFile} onChange={setResumeFile} />
+        </div>
 
         <button
           type="button"
-          className="mt-6 inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold disabled:opacity-50 transition-colors"
+          className="inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold disabled:opacity-50 transition-colors"
           style={{ backgroundColor: "var(--accent)", color: "var(--button-text)" }}
           disabled={isLoading || jdText.trim().length === 0 || !resumeFile}
           onClick={async () => {
