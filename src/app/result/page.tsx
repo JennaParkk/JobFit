@@ -194,61 +194,66 @@ export default function ResultPage() {
             style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
           >
             <p className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--muted)" }}>
-              Required Skills
+              Skill Match
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {required.length ? (
-                required.map((skill) => <SkillTag key={skill} label={skill} />)
-              ) : (
-                <span className="text-sm" style={{ color: "var(--muted)" }}>
-                  No required skills extracted
-                </span>
-              )}
-            </div>
-            <div className="mt-4">
-              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--muted)" }}>
-                Missing
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {(result?.missingSkills?.required ?? []).length ? (
-                  (result?.missingSkills?.required ?? []).map((skill) => (
-                    <SkillTag key={skill} label={skill} variant="missing" />
-                  ))
-                ) : (
-                  <span className="text-sm" style={{ color: "var(--muted)" }}>None</span>
-                )}
-              </div>
-            </div>
-          </div>
 
-          <div
-            className="rounded-2xl border p-6 shadow-sm"
-            style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
-          >
-            <p className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--muted)" }}>
-              Preferred Skills
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {preferred.length ? (
-                preferred.map((skill) => <SkillTag key={skill} label={skill} />)
-              ) : (
-                <span className="text-sm" style={{ color: "var(--muted)" }}>
-                  No preferred skills extracted
-                </span>
-              )}
-            </div>
-            <div className="mt-4">
-              <p className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--muted)" }}>
-                Missing
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {(result?.missingSkills?.preferred ?? []).length ? (
-                  (result?.missingSkills?.preferred ?? []).map((skill) => (
-                    <SkillTag key={skill} label={skill} variant="missing" />
-                  ))
-                ) : (
-                  <span className="text-sm" style={{ color: "var(--muted)" }}>None</span>
-                )}
+            <div className="mt-4 grid gap-6 md:grid-cols-2">
+              <div>
+                <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                  Required Skills
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {required.length ? (
+                    required.map((skill) => <SkillTag key={skill} label={skill} />)
+                  ) : (
+                    <span className="text-sm" style={{ color: "var(--muted)" }}>
+                      No required skills extracted
+                    </span>
+                  )}
+                </div>
+                <div className="mt-4">
+                  <p className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--muted)" }}>
+                    Missing
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(result?.missingSkills?.required ?? []).length ? (
+                      (result?.missingSkills?.required ?? []).map((skill) => (
+                        <SkillTag key={skill} label={skill} variant="missing" />
+                      ))
+                    ) : (
+                      <span className="text-sm" style={{ color: "var(--muted)" }}>None</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium" style={{ color: "var(--foreground)" }}>
+                  Preferred Skills
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {preferred.length ? (
+                    preferred.map((skill) => <SkillTag key={skill} label={skill} />)
+                  ) : (
+                    <span className="text-sm" style={{ color: "var(--muted)" }}>
+                      No preferred skills extracted
+                    </span>
+                  )}
+                </div>
+                <div className="mt-4">
+                  <p className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--muted)" }}>
+                    Missing
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(result?.missingSkills?.preferred ?? []).length ? (
+                      (result?.missingSkills?.preferred ?? []).map((skill) => (
+                        <SkillTag key={skill} label={skill} variant="missing" />
+                      ))
+                    ) : (
+                      <span className="text-sm" style={{ color: "var(--muted)" }}>None</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
