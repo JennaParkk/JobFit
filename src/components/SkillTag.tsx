@@ -4,11 +4,23 @@ type SkillTagProps = {
 };
 
 export default function SkillTag({ label, variant = "default" }: SkillTagProps) {
-  const base = "rounded-full px-3 py-1 text-sm";
-  const style =
-    variant === "missing"
-      ? "bg-red-100 text-red-800"
-      : "bg-gray-100 text-gray-900";
+  if (variant === "missing") {
+    return (
+      <span
+        className="rounded-full px-3 py-1 text-sm"
+        style={{ backgroundColor: "rgba(248, 81, 73, 0.15)", color: "#f85149" }}
+      >
+        {label}
+      </span>
+    );
+  }
 
-  return <span className={`${base} ${style}`}>{label}</span>;
+  return (
+    <span
+      className="rounded-full px-3 py-1 text-sm"
+      style={{ backgroundColor: "rgba(88, 166, 255, 0.15)", color: "#79c0ff" }}
+    >
+      {label}
+    </span>
+  );
 }
