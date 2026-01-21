@@ -70,40 +70,48 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Failed to extract text from resume PDF." }, { status: 400 });
     }
 
-    // 1. Compute semantic similarity
+    // 1) embedding 기반 semantic similarity 계산
     const[jdEmbedding, resumeEmbedding] = await Promise.all([
         createEmbedding(jdText),
         createEmbedding(resumeText)
     ]);
 
-
     const semanticSim = cosineSimilarity(jdEmbedding, resumeEmbedding); // -1 to 1
     const semanticScore = semanticToPercent(semanticSim); // 0 to 100
 
-    // 2. Generate AI summary with both JD and Resume
+    // 2) AI summary
     const aiSummary = await generateSummary(jdText, resumeText);
 
-    // 3. Extract skills from JD and Resume
+    // 3) Skill extraction through LLM)
     const [jdAnalysis, resumeAnalysis] = await Promise.all([
         extractSkillsFromJD(jdText),
         extractSkillsFromResume(resumeText),
-        generateSummary(jdText, resumeText),
     ]); 
 
-    const resumeSkillsRaw = resumeAnalysis.skills ?? [];
-    const resumeSkills = Array.from(new Map(resumeSkillsRaw.map((s) => [normalizeSkill(s), s])).values());
+    // 4) combine tools and concepts as resume skills + normalize
+    const resumeSkillsRaw = [
+        ...(resumeAnalysis.tools ?? []),
+        ...(resumeAnalysis.concepts ?? []),
+    ];
 
+    const resumeSkills = Array.from(
+        // key: normalized skill name, value: original skill name
+        new Map(
+            resumeSkillsRaw.map((s) => [normalizeSkill(s), s])
+        ).values()
+    );
+
+    // 5) clean JD required/preferred skills
     const jdRequiredRaw = jdAnalysis.requiredSkills ?? [];
     const jdPreferredRaw = jdAnalysis.preferredSkills ?? [];
-
     const jdRequired = cleanJDSkills(jdRequiredRaw);
     const jdPreferred = cleanJDSkills(jdPreferredRaw);
 
-    // 4. compute missing skills
+    // 6) Missing Skills
     const missingRequired = computeMissingSkills(jdRequired, resumeSkills);
     const missingPreferred = computeMissingSkills(jdPreferred, resumeSkills);
 
-    // 5. compute weighted skill score
+    // 7) Weighted Skill Score
     const weighted = computeWeightedSkillScore({
         required: jdRequired,
         preferred: jdPreferred,
@@ -111,14 +119,35 @@ export async function POST(req: Request) {
         requiredWeight: 0.8, // 80% weight to required skills
     });
 
-    // 6. compute final match score
-    //   - semantic score weight: 50%
-    //   - skill score weight: 50%
+    // 8) Final Match Score
+    //     weights: 
+    //      semantic score weight: 50%
+    //      skill score weight: 50%
     const matchScore = computeFinalMatchScore({
         semanticScore,
         skillScore: weighted.finalScore,
         semanticWeight: 0.5,
     });
+
+    //////////////////////////////////
+    // debug log
+    console.log("analyze result:", {
+        jdAnalysis,
+        jdRequired,
+        jdPreferred,
+        resumeSkills,
+        semanticScore,
+        skillScore: weighted.finalScore,
+        matchScore,
+        missingRequired,
+        missingPreferred,
+        scoreBreakdown: {
+            requiredScore: weighted.requiredScore,
+            preferredScore: weighted.preferredScore,
+        },
+        aiSummary,
+    });
+    //////////////////////////////////
 
     return NextResponse.json({
         ok: true,
