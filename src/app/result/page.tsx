@@ -64,16 +64,19 @@ export default function ResultPage() {
   // const jdFromURL = searchParams.get("jd") ?? "";
   return (
     <main className="font-sans lg:flex lg:h-[calc(100vh-8rem)] lg:flex-col lg:overflow-hidden">
-      <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-amber-50 p-6 shadow-sm">
+      <div
+        className="rounded-2xl border p-6 shadow-sm"
+        style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
+      >
         <div className="flex flex-col gap-2">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+          <p className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--muted)" }}>
             Result
           </p>
-          <h1 className="text-2xl font-semibold text-slate-900">
-            JD vs Resume Match
+          <h1 className="text-2xl font-semibold" style={{ color: "var(--foreground)" }}>
+            Your job match
           </h1>
-          <p className="text-sm text-slate-600">
-            Score snapshots and skill-level fit, side by side.
+          <p className="text-sm" style={{ color: "var(--muted)" }}>
+            Comprehensive analysis of your fit for this role.
           </p>
         </div>
       </div>
