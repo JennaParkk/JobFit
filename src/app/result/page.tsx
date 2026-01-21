@@ -83,55 +83,67 @@ export default function ResultPage() {
 
       <div className="mt-6 grid gap-6 lg:flex-1 lg:min-h-0 lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside className="h-fit space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+          <div
+            className="rounded-2xl border p-4 shadow-sm"
+            style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
+          >
+            <p className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--muted)" }}>
               Overall
             </p>
-            <p className="mt-2 text-3xl font-semibold text-slate-900">
+            <p className="mt-2 text-3xl font-semibold" style={{ color: "var(--accent)" }}>
               {typeof result?.matchScore === "number"
                 ? `${result.matchScore}%`
                 : "--"}
             </p>
-            <p className="mt-2 text-xs text-slate-500">
-              Skills + semantic blended
+            <p className="mt-2 text-xs" style={{ color: "var(--muted)" }}>
+              Overall fit score
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+          <div
+            className="rounded-2xl border p-4 shadow-sm"
+            style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
+          >
+            <p className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--muted)" }}>
               Required
             </p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">
+            <p className="mt-2 text-2xl font-semibold" style={{ color: "var(--foreground)" }}>
               {typeof requiredScore === "number" ? `${requiredScore}%` : "--"}
             </p>
-            <p className="mt-2 text-xs text-slate-500">
-              Must-have skills match
+            <p className="mt-2 text-xs" style={{ color: "var(--muted)" }}>
+              Essential skills match
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+          <div
+            className="rounded-2xl border p-4 shadow-sm"
+            style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
+          >
+            <p className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--muted)" }}>
               Preferred
             </p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">
+            <p className="mt-2 text-2xl font-semibold" style={{ color: "var(--foreground)" }}>
               {typeof preferredScore === "number" ? `${preferredScore}%` : "--"}
             </p>
-            <p className="mt-2 text-xs text-slate-500">
-              Bonus skills alignment
+            <p className="mt-2 text-xs" style={{ color: "var(--muted)" }}>
+              Additional skills match
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+          <div
+            className="rounded-2xl border p-4 shadow-sm"
+            style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
+          >
+            <p className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--muted)" }}>
               Semantic
             </p>
-            <p className="mt-2 text-2xl font-semibold text-slate-900">
+            <p className="mt-2 text-2xl font-semibold" style={{ color: "var(--foreground)" }}>
               {typeof result?.semanticScore === "number"
                 ? `${result.semanticScore}%`
                 : "--"}
             </p>
-            <p className="mt-2 text-xs text-slate-500">
-              Contextual similarity
+            <p className="mt-2 text-xs" style={{ color: "var(--muted)" }}>
+              Contextual match
             </p>
           </div>
         </aside>
