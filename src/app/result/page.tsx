@@ -105,28 +105,13 @@ export default function ResultPage() {
             style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
           >
             <p className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--muted)" }}>
-              Required
+              Skill Match
             </p>
             <p className="mt-2 text-2xl font-semibold" style={{ color: "var(--foreground)" }}>
-              {typeof requiredScore === "number" ? `${requiredScore}%` : "--"}
+              {typeof result?.skillScore === "number" ? `${result.skillScore}%` : "--"}
             </p>
             <p className="mt-2 text-xs" style={{ color: "var(--muted)" }}>
-              Essential skills match
-            </p>
-          </div>
-
-          <div
-            className="rounded-2xl border p-4 shadow-sm"
-            style={{ borderColor: "var(--border)", backgroundColor: "var(--card)" }}
-          >
-            <p className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--muted)" }}>
-              Preferred
-            </p>
-            <p className="mt-2 text-2xl font-semibold" style={{ color: "var(--foreground)" }}>
-              {typeof preferredScore === "number" ? `${preferredScore}%` : "--"}
-            </p>
-            <p className="mt-2 text-xs" style={{ color: "var(--muted)" }}>
-              Additional skills match
+              Overall skill alignment
             </p>
           </div>
 
