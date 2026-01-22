@@ -35,10 +35,42 @@ export function normalizeSkill(skill: string): string {
         "ci cd": "continuous integration continuous deployment",
         "next": "nextjs",
         "next.js": "nextjs",
+        "react.js": "react",
+        "gitlab": "git",
+        "github": "git",
+        "restful apis": "rest",
+        "apis": "rest",
+        "deckgl": "deck.gl",
+        "kepler.gl": "kepler",
     };
 
     return aliases[base] ?? base;
 }
+
+export type skillGroup = { type: "any_of"; items: string[] };
+
+// check if any skill from an any_of group is present in resume skills
+// return true if any skill is found, false otherwise
+function matchAnyOfGroup(group: skillGroup, resumeSkillsSet: Set<string>): boolean {
+    return group.items.some((item) => resumeSkillsSet.has(normalizeSkill(item)));
+}
+
+// compute skill score considering both individual skills and any_of groups
+function computeSkillScoreWithGroups(
+    jdSkills: string[],
+    jdGroups: skillGroup[],
+    resumeSkills: string[]
+): number {
+    const resumeSet = new Set((resumeSkills ?? []).map(normalizeSkill));
+    const skillHits = jdSkills.filter((s) => resumeSet.has(normalizeSkill(s))).length;
+    const groupHits = jdGroups.filter((g) => matchAnyOfGroup(g, resumeSet)).length;
+
+    const totalUnts = (jdSkills?.length ?? 0) + (jdGroups?.length ?? 0);
+    if (totalUnts === 0) return 0;
+
+    return Math.round(((skillHits + groupHits) / totalUnts) * 100);
+}
+
 
 // compute skill score as percentage of JD skills found in resume skills
 // params: 
@@ -74,26 +106,36 @@ export function computeMissingSkills(jdSkills: string[], resumeSkills: string[])
 
 // compute weighted skill score from required and preferred skills
 // params:
-//  required: string[] - list of required JD skills
-//  preferred: string[] - list of preferred JD skills
-//  resumeSkills: string[] - list of resume skills
-// required vs. preferred weight: 
-// - default required weight is 0.8, preferred weight is 0.2
-// logic:
-// - compute required skill score
-// - compute preferred skill score
-// - compute final score as weighted sum of required and preferred scores
+//  required, preferred, requiredGroups, preferredGroups: string[], resumeSkills
+// requiredWeight: weight for required skills (default 0.8)
+// logic: 
+// 1) compute required skill score using computeSkillScoreWithGroups
+// 2) compute preferred skill score using computeSkillScoreWithGroups
+// 3) combine required and preferred scores using weighted average
+//    default weight: required 0.8, preferred 0.2
 export function computeWeightedSkillScore(params: {
     required: string[];
     preferred: string[];
+    requiredGroups?: skillGroup[];
+    preferredGroups?: skillGroup[];
     resumeSkills: string[];
     requiredWeight?: number; // default 0.8
 }): { requiredScore: number; preferredScore: number; finalScore: number } {
+    
     const requiredWeight = typeof params.requiredWeight === "number" ? params.requiredWeight : 0.8;
     const preferredWeight = 1 - requiredWeight;
 
-    const requiredScore = computeSkillScore(params.required, params.resumeSkills);
-    const preferredScore = computeSkillScore(params.preferred, params.resumeSkills);
+    const requiredScore = computeSkillScoreWithGroups(
+        params.required,
+        params.requiredGroups ?? [],
+        params.resumeSkills
+    );
+
+    const preferredScore = computeSkillScoreWithGroups(
+        params.preferred,
+        params.preferredGroups ?? [],
+        params.resumeSkills
+    );
 
     const finalScore = Math.round(
         requiredScore * requiredWeight + preferredScore * preferredWeight
@@ -126,3 +168,5 @@ export function computeFinalMatchScore(params: {
         params.semanticScore * semanticWeight + params.skillScore * skillWeight
     );
 }
+
+

@@ -46,6 +46,21 @@ function cleanJDSkills(skills: string[]) {
     
 }
 
+type SkillGroup = {
+    type: "any_of";
+    items: string[];
+};
+
+function normalizeGroups(groups: SkillGroup[]): SkillGroup[] {
+    return (groups ?? []).map((group) => ({
+        type: group.type,
+        items: Array.from(
+            new Set((group.items ?? []).map(normalizeSkill))
+        ),
+    }));
+}
+
+
 export async function POST(req: Request) {
     const formData = await req.formData();
 
@@ -104,8 +119,12 @@ export async function POST(req: Request) {
     // 5) clean JD required/preferred skills
     const jdRequiredRaw = jdAnalysis.requiredSkills ?? [];
     const jdPreferredRaw = jdAnalysis.preferredSkills ?? [];
+    const jdRequiredGroupsRaw = jdAnalysis.requiredGroups ?? [];
+    const jdPreferredGroupsRaw = jdAnalysis.preferredGroups ?? [];
     const jdRequired = cleanJDSkills(jdRequiredRaw);
     const jdPreferred = cleanJDSkills(jdPreferredRaw);
+    const jdRequiredGroups = normalizeGroups(jdRequiredGroupsRaw);
+    const jdPreferredGroups = normalizeGroups(jdPreferredGroupsRaw);
 
     // 6) Missing Skills
     const missingRequired = computeMissingSkills(jdRequired, resumeSkills);
@@ -115,6 +134,8 @@ export async function POST(req: Request) {
     const weighted = computeWeightedSkillScore({
         required: jdRequired,
         preferred: jdPreferred,
+        requiredGroups: jdRequiredGroups,
+        preferredGroups: jdPreferredGroups,
         resumeSkills,
         requiredWeight: 0.8, // 80% weight to required skills
     });
@@ -135,6 +156,8 @@ export async function POST(req: Request) {
         jdAnalysis,
         jdRequired,
         jdPreferred,
+        jdRequiredGroups,
+        jdPreferredGroups,
         resumeSkills,
         semanticScore,
         skillScore: weighted.finalScore,
@@ -156,6 +179,8 @@ export async function POST(req: Request) {
         jdAnalysis,
         jdRequired,
         jdPreferred,
+        jdRequiredGroups: jdRequiredGroups,
+        jdPreferredGroups: jdPreferredGroups,
 
         resumeSkills,
 
