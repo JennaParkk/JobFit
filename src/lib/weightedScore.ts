@@ -1,6 +1,6 @@
+import type { WeightedSkill } from "@/services/jdWeighting";
+
 // normalize skill string for comparison
-
-
 export function normalizeSkill(skill: string): string {
     const base = skill
         .toLocaleLowerCase()
@@ -50,22 +50,23 @@ export function normalizeSkill(skill: string): string {
     return aliases[base] ?? base;
 }
 
-export type skillGroup = { type: "any_of"; items: string[] };
+export type SkillItem = { label: string; key: string };
+export type skillGroup = { type: "any_of"; items: SkillItem[] };
 
 // check if any skill from an any_of group is present in resume skills
 // return true if any skill is found, false otherwise
 function matchAnyOfGroup(group: skillGroup, resumeSkillsSet: Set<string>): boolean {
-    return group.items.some((item) => resumeSkillsSet.has(normalizeSkill(item)));
+    return group.items.some((item) => resumeSkillsSet.has(item.key));
 }
 
 // compute skill score considering both individual skills and any_of groups
 function computeSkillScoreWithGroups(
-    jdSkills: string[],
+    jdSkills: SkillItem[],
     jdGroups: skillGroup[],
-    resumeSkills: string[]
+    resumeSkillKeys: string[]
 ): number {
-    const resumeSet = new Set((resumeSkills ?? []).map(normalizeSkill));
-    const skillHits = jdSkills.filter((s) => resumeSet.has(normalizeSkill(s))).length;
+    const resumeSet = new Set(resumeSkillKeys ?? []);
+    const skillHits = jdSkills.filter((s) => resumeSet.has(s.key)).length;
     const groupHits = jdGroups.filter((g) => matchAnyOfGroup(g, resumeSet)).length;
 
     const totalUnits = (jdSkills?.length ?? 0) + (jdGroups?.length ?? 0);
@@ -85,11 +86,14 @@ function computeSkillScoreWithGroups(
 //  - normalize resume skills into a set for fast lookup
 //  - count how many jdSkills are present in resumeSkills
 //  - compute score as (hit / total JD skills) * 100 and round to nearest integer
-export function computeSkillScore(jdSkills: string[], resumeSkills: string[]): number {
+export function computeSkillScore(
+    jdSkills: SkillItem[],
+    resumeSkillKeys: string[]
+): number {
     if (!Array.isArray(jdSkills) || jdSkills.length === 0) return 0;
 
-    const resumeSet = new Set((resumeSkills ?? []).map(normalizeSkill));
-    const hit = jdSkills.filter((s) => resumeSet.has(normalizeSkill(s))).length;
+    const resumeSet = new Set(resumeSkillKeys ?? []);
+    const hit = jdSkills.filter((s) => resumeSet.has(s.key)).length;
 
     return Math.round((hit / jdSkills.length) * 100);
 }
@@ -102,9 +106,12 @@ export function computeSkillScore(jdSkills: string[], resumeSkills: string[]): n
 // logic:
 //  - normalize resume skills into a set for fast lookup
 //  - filter jdSkills to only those not present in resumeSkills
-export function computeMissingSkills(jdSkills: string[], resumeSkills: string[]): string[] {
-    const resumeSet = new Set((resumeSkills ?? []).map(normalizeSkill));
-    return jdSkills.filter((s) => !resumeSet.has(normalizeSkill(s)));
+export function computeMissingSkills(
+    jdSkills: SkillItem[],
+    resumeSkillKeys: string[]
+): string[] {
+    const resumeSet = new Set(resumeSkillKeys ?? []);
+    return jdSkills.filter((s) => !resumeSet.has(s.key)).map((s) => s.label);
 }
 
 // compute weighted skill score from required and preferred skills
@@ -117,11 +124,11 @@ export function computeMissingSkills(jdSkills: string[], resumeSkills: string[])
 // 3) combine required and preferred scores using weighted average
 //    default weight: required 0.8, preferred 0.2
 export function computeWeightedSkillScore(params: {
-    required: string[];
-    preferred: string[];
+    required: SkillItem[];
+    preferred: SkillItem[];
     requiredGroups?: skillGroup[];
     preferredGroups?: skillGroup[];
-    resumeSkills: string[];
+    resumeSkillKeys: string[];
     requiredWeight?: number; // default 0.8
 }): { requiredScore: number; preferredScore: number; finalScore: number } {
     
@@ -131,13 +138,13 @@ export function computeWeightedSkillScore(params: {
     const requiredScore = computeSkillScoreWithGroups(
         params.required,
         params.requiredGroups ?? [],
-        params.resumeSkills
+        params.resumeSkillKeys
     );
 
     const preferredScore = computeSkillScoreWithGroups(
         params.preferred,
         params.preferredGroups ?? [],
-        params.resumeSkills
+        params.resumeSkillKeys
     );
 
     const finalScore = Math.round(
@@ -174,11 +181,11 @@ export function computeFinalMatchScore(params: {
 
 export function computeImportanceWeightedScore(
     jdSkills: WeightedSkill[],
-    resumeSkills: string[]
+    resumeSkillKeys: string[]
 ): number {
     if (!Array.isArray(jdSkills) || jdSkills.length === 0) return 0;
     
-    const resumeSet = new Set((resumeSkills ?? []).map(normalizeSkill));
+    const resumeSet = new Set(resumeSkillKeys ?? []);
 
     let totalImportance = 0;
     let matchedImportance = 0;
@@ -189,8 +196,7 @@ export function computeImportanceWeightedScore(
 
         totalImportance += importance;
 
-        const key = normalizeSkill(skill.name);
-        if (resumeSet.has(key)) {
+        if (skill.key && resumeSet.has(skill.key)) {
             matchedImportance += importance;
         }
     }
@@ -201,6 +207,4 @@ export function computeImportanceWeightedScore(
 }
 
         
-
-
 
