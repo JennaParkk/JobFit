@@ -1,8 +1,10 @@
 import { openai } from "@/services/openaiClient"
+import { normalizeSkill } from "@/lib/weightedScore";
 
 
 export type WeightedSkill = {
     name: string;
+    key: string;
     category: "required" | "preferred";
     importance: number; // 0.1 - 1.0
     reason: string;
@@ -11,15 +13,6 @@ export type WeightedSkill = {
 // Clamp a number between min and max
 function clamp(n: number, min: number, max: number) {
     return Math.min(max, Math.max(min, n));
-}
-
-function normalizeSkillKey(name: string) {
-    return name
-        .toLocaleLowerCase()
-        .replace(/[\(\)\[\]\{\},.]/g, "")
-        .replace(/[-/]/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
 }
 
 // remove fence before JSON.parse
@@ -53,7 +46,7 @@ function normalizeAndDuplicateSkills(
         if (!name) continue;
 
         // nomalize key for comparison
-        const normalizedKey = normalizeSkillKey(name);
+        const normalizedKey = normalizeSkill(name);
 
         const importance = clamp(
             Number(skill.importance ?? 0.1) || 0.1,
@@ -63,6 +56,7 @@ function normalizeAndDuplicateSkills(
 
         const cleanedSkill: WeightedSkill = {
             name,
+            key: normalizedKey,
             importance,
             category: skill.category === "preferred" ? "preferred" : "required",
             reason: String(skill?.reason ?? "").slice(0, 120)

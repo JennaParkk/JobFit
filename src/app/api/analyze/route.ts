@@ -15,6 +15,7 @@ import {
     computeWeightedSkillScore,
     computeFinalMatchScore,
     computeImportanceWeightedScore,
+    type SkillItem,
 } from "@/lib/weightedScore";
 
 const pdfParse = require("pdf-parse/lib/pdf-parse.js");
@@ -22,8 +23,43 @@ const pdfParse = require("pdf-parse/lib/pdf-parse.js");
 // Enable Node.js runtime for this route
 export const runtime = "nodejs";
 
+type RawSkillGroup = {
+    type: "any_of";
+    items: string[];
+};
+
+type SkillGroupItems = {
+    type: "any_of";
+    items: SkillItem[];
+};
+
+function toSkillItems(skills: string[]): SkillItem[] {
+    const items: SkillItem[] = [];
+    const seen = new Set<string>();
+
+    for (const raw of skills ?? []) {
+        const label = String(raw ?? "").trim();
+        if (!label) continue;
+
+        const key = normalizeSkill(label);
+        if (seen.has(key)) continue;
+
+        seen.add(key);
+        items.push({ label, key });
+    }
+
+    return items;
+}
+
+function buildGroupItems(groups: RawSkillGroup[]): SkillGroupItems[] {
+    return (groups ?? []).map((group) => ({
+        type: group.type,
+        items: toSkillItems(group.items ?? []),
+    }));
+}
+
 // clean JD skills by removing generic/junk skills
-function cleanJDSkills(skills: string[]) {
+function cleanJDSkills(skills: string[]): SkillItem[] {
     const junk = new Set([
         "programming languages",
         "programming language",
@@ -31,7 +67,7 @@ function cleanJDSkills(skills: string[]) {
         "front end frameworks",
         "front-end frameworks",
         "frontend frameworks",
-    ]);
+    ].map(normalizeSkill));
 
     // normalize and filter out junk skills
     const cleaned = skills
@@ -40,27 +76,9 @@ function cleanJDSkills(skills: string[]) {
         .map((s) => s.replace(/^familiarity with\s+/i, "").trim())
         .map((s) => s.replace(/^knowledge of\s+/i, "").trim())
         .map((s) => s.replace(/^experience in\s+/i, "").trim())
-        .filter((s) => s.length >0)
-        .filter((s) => !junk.has(normalizeSkill(s)));
-    
-    const unique = Array.from(new Map(cleaned.map((s) => [normalizeSkill(s), s])).values());
+        .filter((s) => s.length >0);
 
-    return unique;
-    
-}
-
-type SkillGroup = {
-    type: "any_of";
-    items: string[];
-};
-
-function normalizeGroups(groups: SkillGroup[]): SkillGroup[] {
-    return (groups ?? []).map((group) => ({
-        type: group.type,
-        items: Array.from(
-            new Set((group.items ?? []).map(normalizeSkill))
-        ),
-    }));
+    return toSkillItems(cleaned).filter((item) => !junk.has(item.key));
 }
 
 
@@ -113,41 +131,48 @@ export async function POST(req: Request) {
         ...(resumeAnalysis.concepts ?? []),
     ];
 
-    const resumeSkills = Array.from(
-        // key: normalized skill name, value: original skill name
-        new Map(
-            resumeSkillsRaw.map((s) => [normalizeSkill(s), s])
-        ).values()
-    );
+    const resumeSkillItems = toSkillItems(resumeSkillsRaw);
+    const resumeSkills = resumeSkillItems.map((item) => item.label);
+    const resumeSkillKeys = resumeSkillItems.map((item) => item.key);
 
     // 5) clean JD required/preferred skills
     const jdRequiredRaw = jdAnalysis.requiredSkills ?? [];
     const jdPreferredRaw = jdAnalysis.preferredSkills ?? [];
     const jdRequiredGroupsRaw = jdAnalysis.requiredGroups ?? [];
     const jdPreferredGroupsRaw = jdAnalysis.preferredGroups ?? [];
-    const jdRequired = cleanJDSkills(jdRequiredRaw);
-    const jdPreferred = cleanJDSkills(jdPreferredRaw);
-    const jdRequiredGroups = normalizeGroups(jdRequiredGroupsRaw);
-    const jdPreferredGroups = normalizeGroups(jdPreferredGroupsRaw);
+    const jdRequiredItems = cleanJDSkills(jdRequiredRaw);
+    const jdPreferredItems = cleanJDSkills(jdPreferredRaw);
+    const jdRequiredGroupItems = buildGroupItems(jdRequiredGroupsRaw);
+    const jdPreferredGroupItems = buildGroupItems(jdPreferredGroupsRaw);
+    const jdRequired = jdRequiredItems.map((item) => item.label);
+    const jdPreferred = jdPreferredItems.map((item) => item.label);
+    const jdRequiredGroups = jdRequiredGroupItems.map((group) => ({
+        type: group.type,
+        items: group.items.map((item) => item.label),
+    }));
+    const jdPreferredGroups = jdPreferredGroupItems.map((group) => ({
+        type: group.type,
+        items: group.items.map((item) => item.label),
+    }));
 
     // 6) Missing Skills
-    const missingRequired = computeMissingSkills(jdRequired, resumeSkills);
-    const missingPreferred = computeMissingSkills(jdPreferred, resumeSkills);
+    const missingRequired = computeMissingSkills(jdRequiredItems, resumeSkillKeys);
+    const missingPreferred = computeMissingSkills(jdPreferredItems, resumeSkillKeys);
 
     // 7) Weighted Skill Score
     const weighted = computeWeightedSkillScore({
-        required: jdRequired,
-        preferred: jdPreferred,
-        requiredGroups: jdRequiredGroups,
-        preferredGroups: jdPreferredGroups,
-        resumeSkills,
+        required: jdRequiredItems,
+        preferred: jdPreferredItems,
+        requiredGroups: jdRequiredGroupItems,
+        preferredGroups: jdPreferredGroupItems,
+        resumeSkillKeys,
         requiredWeight: 0.8, // 80% weight to required skills
     });
 
     // compute weighted skill score 
     const importanceWeightedScore = computeImportanceWeightedScore(
         weightedSkills,
-        resumeSkills
+        resumeSkillKeys
     );
 
     // 8) Final Match Score
