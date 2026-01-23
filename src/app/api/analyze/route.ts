@@ -7,11 +7,14 @@ import { generateSummary } from "@/services/summary";
 import { createEmbedding } from "@/lib/embeddings";
 import { cosineSimilarity, semanticToPercent } from "@/lib/similarity";
 
+import { extractWeightedSkillsFromJD } from "@/services/jdWeighting";
+
 import {
     normalizeSkill,
     computeMissingSkills,
     computeWeightedSkillScore,
     computeFinalMatchScore,
+    computeImportanceWeightedScore,
 } from "@/lib/weightedScore";
 
 const pdfParse = require("pdf-parse/lib/pdf-parse.js");
@@ -98,9 +101,10 @@ export async function POST(req: Request) {
     const aiSummary = await generateSummary(jdText, resumeText);
 
     // 3) Skill extraction through LLM)
-    const [jdAnalysis, resumeAnalysis] = await Promise.all([
+    const [jdAnalysis, resumeAnalysis, weightedSkills] = await Promise.all([
         extractSkillsFromJD(jdText),
         extractSkillsFromResume(resumeText),
+        extractWeightedSkillsFromJD(jdText),
     ]); 
 
     // 4) combine tools and concepts as resume skills + normalize
@@ -140,13 +144,22 @@ export async function POST(req: Request) {
         requiredWeight: 0.8, // 80% weight to required skills
     });
 
+    // compute weighted skill score 
+    const importanceWeightedScore = computeImportanceWeightedScore(
+        weightedSkills,
+        resumeSkills
+    );
+
     // 8) Final Match Score
     //     weights: 
     //      semantic score weight: 50%
     //      skill score weight: 50%
     const matchScore = computeFinalMatchScore({
         semanticScore,
-        skillScore: weighted.finalScore,
+        // skillScore: weighted.finalScore,
+        skillScore: Math.round(
+            weighted.finalScore * 0.5 + importanceWeightedScore * 0.5
+        ),
         semanticWeight: 0.5,
     });
 

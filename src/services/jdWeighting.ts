@@ -1,10 +1,11 @@
 import { openai } from "@/services/openaiClient"
 
+
 export type WeightedSkill = {
     name: string;
+    category: "required" | "preferred";
     importance: number; // 0.1 - 1.0
     reason: string;
-    category: "required" | "preferred";
 };
 
 // Clamp a number between min and max

@@ -3,6 +3,8 @@ import { openai } from "@/services/openaiClient";
 type JDAnalysis = {
     requiredSkills: string[];
     preferredSkills: string[];
+    requiredGroups: { type: "any_of"; items: string[] }[];
+    preferredGroups: { type: "any_of"; items: string[] }[];
     level: string;
 };
 
@@ -18,11 +20,14 @@ export async function extractSkillsFromJD(jdText: string): Promise<JDAnalysis> {
     Rules:
     - Output ONLY skill names (1-3 words).
     - No duplicates (case insensitive).
-    - Prefer concrete technologies over categories.
+    - Prefer concrete tecnologies over categories.
     - Do NOT include vague categories like "programming languages" or "frameworks".
     - Extract ONLY explicitly mentioned skills
     - If category appears with examples (e.g., "frameworks like React, Vue"), extract the examples only
     - Do NOT infer or assume unlisted skills
+    - - If JD says "at least one of", "one of", "either", or "including but not limited to", extract those items into an any_of group.
+    - Items inside groups must NOT also appear in requiredSkills/preferredSkills.
+
 
     LEVEL DETECTION RULES:
     - "intern" or "entry-level" → intern
@@ -36,6 +41,8 @@ export async function extractSkillsFromJD(jdText: string): Promise<JDAnalysis> {
    {
         "requiredSkills": ["skill1", "skill2", ...],
         "preferredSkills": ["skill1", "skill2", ...],
+        "requiredGroups": [{"type":"any_of","items":["skill1","skill2",...]}],
+        "preferredGroups": [{"type":"any_of","items":["skill1","skill2",...]}],
         "level": "one of [\"intern\", \"junior\", \"mid\", \"senior\", \"lead\"]"
    }
 
@@ -47,6 +54,7 @@ export async function extractSkillsFromJD(jdText: string): Promise<JDAnalysis> {
     try {
         const res = await openai.chat.completions.create({
         model: "gpt-4o-mini",
+        temperature: 0,
         messages: [{ role: "user", content: prompt }],
     });
     const raw = res.choices[0].message.content || "{}";
@@ -67,6 +75,8 @@ export async function extractSkillsFromJD(jdText: string): Promise<JDAnalysis> {
         return {
             requiredSkills: [],
             preferredSkills: [],
+            requiredGroups: [],
+            preferredGroups: [],
             level: "unknown",
         };
     }

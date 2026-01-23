@@ -1,3 +1,6 @@
+// normalize skill string for comparison
+
+
 export function normalizeSkill(skill: string): string {
     const base = skill
         .toLocaleLowerCase()
@@ -65,10 +68,10 @@ function computeSkillScoreWithGroups(
     const skillHits = jdSkills.filter((s) => resumeSet.has(normalizeSkill(s))).length;
     const groupHits = jdGroups.filter((g) => matchAnyOfGroup(g, resumeSet)).length;
 
-    const totalUnts = (jdSkills?.length ?? 0) + (jdGroups?.length ?? 0);
-    if (totalUnts === 0) return 0;
+    const totalUnits = (jdSkills?.length ?? 0) + (jdGroups?.length ?? 0);
+    if (totalUnits === 0) return 0;
 
-    return Math.round(((skillHits + groupHits) / totalUnts) * 100);
+    return Math.round(((skillHits + groupHits) / totalUnits) * 100);
 }
 
 
@@ -168,5 +171,36 @@ export function computeFinalMatchScore(params: {
         params.semanticScore * semanticWeight + params.skillScore * skillWeight
     );
 }
+
+export function computeImportanceWeightedScore(
+    jdSkills: WeightedSkill[],
+    resumeSkills: string[]
+): number {
+    if (!Array.isArray(jdSkills) || jdSkills.length === 0) return 0;
+    
+    const resumeSet = new Set((resumeSkills ?? []).map(normalizeSkill));
+
+    let totalImportance = 0;
+    let matchedImportance = 0;
+
+    for (const skill of jdSkills) {
+        const importance = typeof skill.importance === "number" ? skill.importance : 0;
+        if (importance <= 0) continue;
+
+        totalImportance += importance;
+
+        const key = normalizeSkill(skill.name);
+        if (resumeSet.has(key)) {
+            matchedImportance += importance;
+        }
+    }
+
+    if (totalImportance === 0) return 0;
+
+    return Math.round((matchedImportance / totalImportance) * 100);
+}
+
+        
+
 
 
