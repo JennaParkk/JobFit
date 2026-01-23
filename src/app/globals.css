@@ -1,4 +1,4 @@
-@import "tailwindcss";
+/*@import "tailwindcss";
 
 :root {
   --background: #ffffff;
@@ -23,4 +23,109 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}*/
+
+@import "tailwindcss";
+
+:root {
+  --background: #faf9f7;
+  --foreground: #2d2a26;
+  --surface: #ffffff;
+  --surface-muted: #f5f3f0;
+  --border: rgba(45, 42, 38, 0.1);
+  --ring: #ff6b6b;
+  --accent-coral: #ff6b6b;
+  --accent-peach: #ffa07a;
+  --warm-gray: #8b8278;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-jakarta);
+  --font-mono: var(--font-space-mono);
+  
+  /* Custom colors for warm theme */
+  --color-coral-50: #fff5f3;
+  --color-coral-100: #ffe8e3;
+  --color-coral-200: #ffd4cc;
+  --color-coral-300: #ffb3a3;
+  --color-coral-400: #ff8a70;
+  --color-coral-500: #ff6b6b;
+  --color-coral-600: #f04545;
+  --color-coral-700: #d63535;
+  --color-coral-800: #b02d2d;
+  --color-coral-900: #8f2a2a;
+  
+  --color-peach-400: #ffa07a;
+  --color-peach-500: #ff7b3d;
+  
+  --color-rose-500: #f43f5e;
+  --color-rose-600: #e11d48;
+  
+  --color-stone-50: #fafaf9;
+  --color-stone-100: #f5f5f4;
+  --color-stone-200: #e7e5e4;
+  --color-stone-300: #d6d3d1;
+  --color-stone-400: #a8a29e;
+  --color-stone-500: #78716c;
+  --color-stone-600: #57534e;
+  --color-stone-700: #44403c;
+  --color-stone-800: #292524;
+  --color-stone-900: #1c1917;
+}
+
+body {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(circle at 15% 15%, rgba(255, 160, 122, 0.15), transparent 45%),
+    radial-gradient(circle at 85% 10%, rgba(255, 107, 107, 0.12), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(250, 249, 247, 1) 60%);
+  color: var(--foreground);
+  font-family: var(--font-jakarta), "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(45, 42, 38, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 42, 38, 0.04) 1px, transparent 1px);
+  background-size: 100px 100px;
+  mask-image: radial-gradient(circle at top, black 35%, transparent 75%);
+  pointer-events: none;
+}
+
+::selection {
+  background: rgba(255, 160, 122, 0.25);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(139, 130, 120, 0.15);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 107, 107, 0.35);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 107, 107, 0.5);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
 }
