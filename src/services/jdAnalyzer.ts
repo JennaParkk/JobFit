@@ -21,11 +21,11 @@ export async function extractSkillsFromJD(jdText: string): Promise<JDAnalysis> {
     - Output ONLY skill names (1-3 words).
     - No duplicates (case insensitive).
     - Prefer concrete tecnologies over categories.
-    - Do NOT include vague categories like "programming languages" or "frameworks".
+    - Do NOT include vague domain/category labels such as: "virtualization", "frontend/backend skills", "web development". 
     - Extract ONLY explicitly mentioned skills
     - If category appears with examples (e.g., "frameworks like React, Vue"), extract the examples only
     - Do NOT infer or assume unlisted skills
-    - - If JD says "at least one of", "one of", "either", or "including but not limited to", extract those items into an any_of group.
+    - If JD says "at least one of", "one of", "either", or "including but not limited to", extract those items into an any_of group.
     - Items inside groups must NOT also appear in requiredSkills/preferredSkills.
 
 

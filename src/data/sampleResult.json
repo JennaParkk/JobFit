@@ -1,0 +1,30 @@
+{
+  "ok": true,
+  "jdRequired": ["JavaScript", "TypeScript", "React", "Node.js", "SQL", "REST APIs", "Git", "Testing", "System design", "GraphQL"],
+  "jdPreferred": ["Next.js", "Docker", "CI/CD", "AWS", "Kubernetes"],
+  "resumeSkills": ["Java", "Python", "JavaScript", "TypeScript", "React", "Next.js", "Node.js", "Express", "Postgres", "Prisma", "HTML", "CSS", "Docker", "Figma", "Bootstrap", "Git", "Tableau"],
+  "semanticScore": 85,
+  "skillScore": 65,
+  "matchScore": 75,
+  "missingSkills": {
+    "required": ["Testing", "System design", "GraphQL"],
+    "preferred": ["CI/CD", "AWS", "Kubernetes"]
+  },
+  "scoreBreakdown": {
+    "requiredScore": 70,
+    "preferredScore": 40
+  },
+  "aiSummary": {
+    "strengths": [
+      "Full-stack alignment: React, Next.js, Node.js, Express, and Postgres/Prisma.",
+      "Multiple languages (Java, Python, JavaScript/TypeScript) and Docker experience.",
+      "Strong frontend (Figma, Bootstrap, HTML/CSS) and database layer."
+    ],
+    "gaps": [
+      "No Testing (unit/integration) experience mentioned.",
+      "No System design or GraphQL experience highlighted.",
+      "No CI/CD, AWS, or Kubernetes experience mentioned."
+    ],
+    "overallFit": "Candidate has solid full-stack experience (frontend, backend, database) but lacks Testing, System design, and GraphQL experience."
+  }
+}

@@ -37,10 +37,10 @@ export default function Home() {
               </Link>
 
               <Link
-                href="#features"
+                href="/sample"
                 className="inline-flex items-center gap-2 rounded-2xl border-2 border-stone-300 bg-white px-8 py-4 text-base font-semibold text-stone-900 transition-all hover:border-stone-400 hover:bg-stone-50"
               >
-                How it works
+                View sample
               </Link>
             </div>
           </div>
