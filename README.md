@@ -1,97 +1,129 @@
 # JobFit — Semantic Job Description & Resume Matching
 
-JobFit is a semantic matching tool designed to help early-career candidates understand how well their resume aligns with a specific job description and what to improve next.
+**Personal project.** A semantic matching tool that helps early-career candidates see how well their resume aligns with a technical job description and what to improve.
 
-Instead of relying only on keyword overlap, JobFit combines semantic similarity, skill-level matching, and structured LLM reasoning to surface meaningful strengths and gaps.
+JobFit is optimized for **technical roles** (e.g. engineering, product, data) and **entry-level positions** (internships, new grad, early career). It is not designed for senior or highly experienced roles.
 
+Instead of keyword overlap alone, JobFit combines semantic similarity (embeddings), skill-level matching, and LLM-generated summaries to surface interpretable strengths and gaps.
+
+---
+
+## Scope
+
+- **For:** Technical job descriptions; entry-level applicants (interns, new grads, early career).
+- **Not for:** Senior-level roles or long career timelines; non-technical JDs.
+
+---
 
 ## Core Ideas & Design Decisions
 
 ### 1. Semantic similarity beyond keywords
 
-Computes embeddings for:
-- the entire job description
-- the entire resume
-
-Cosine similarity is used to measure how closely the *meaning* of the two texts align, even when exact keywords differ.
-
-This helps capture real relevance that keyword matching often misses.
+- Computes embeddings (OpenAI `text-embedding-3-small`) for the full job description and resume.
+- Uses cosine similarity and normalizes to a 0–100 semantic score.
+- Captures conceptual alignment even when wording differs (e.g. JD: “React required” vs resume: “Built SPAs with modern frontend frameworks”).
 
 ### 2. Skill matching as a separate, interpretable signal
 
-Extracts:
-- required skills
-- preferred skills
+- LLM extracts **required** and **preferred** skills from the JD and resume.
+- Compares coverage to produce required/preferred match scores and explicit **missing skills** lists.
+- Skill score combines required (90% weight) and preferred (10% weight).
 
-from the job description and compares them against skills extracted from the resume.
+### 3. Importance weighting for JD skills
 
-This produces:
-- required skill match score
-- preferred skill match score
-- explicit lists of missing skills
+- Not all JD skills are equally important. JobFit assigns importance (0–1) using linguistic cues (“must”, “required”, “preferred”), position in the JD, frequency, and context.
+- Prevents “nice-to-have” skills from dragging down the score.
 
-### 3. Weighted scoring instead of a single opaque number
+### 4. Weighted scoring instead of a single number
 
-Computes multiple signals before producing a final score:
+- **Semantic score** (0–100): embedding-based conceptual alignment.
+- **Skill score**: weighted required + preferred (and importance-weighted).
+- **Final match score**: 50% semantic + 50% skill.
+- Multiple signals keep the result interpretable and tunable.
 
-- semantic score (embedding-based)
-- skill score (weighted required + preferred)
-- final match score (blend of semantic and skill scores)
+### 5. Structured LLM summary
 
-This design allows future tuning and avoids hiding logic behind a single metric.
+- After scoring, generates strengths, gaps, and an overall fit phrase.
+- JSON-based for visualization (e.g. result page).
 
-### 4. Structured LLM summaries for human-readable insight
-
-After numeric scoring, generates a structured summary including:
-- key strengths
-- notable gaps
-- overall fit assessment
-
-The output is JSON-based to support future visualization and recommendation features.
+---
 
 ## Current Features
 
-- Semantic similarity using text embeddings
-- Skill extraction from job descriptions and resumes
-- Required vs preferred skill breakdown
-- Weighted match score
+- Semantic similarity using OpenAI text-embedding-3-small
+- Skill extraction from JD and resume (required / preferred, including “any-of” groups)
+- JD skill importance weighting
+- Weighted match score (semantic + skill, 90/10 required vs preferred)
 - AI-generated summary (strengths, gaps, overall fit)
-- Modular backend architecture
+- PDF resume ingestion
+- Modular backend (embeddings, similarity, scoring, analyzers, summary)
+
+---
 
 ## Tech Stack
 
-- Next.js (App Router)
-- TypeScript
-- OpenAI API
-  - embeddings for semantic similarity
-  - LLMs for skill extraction and summaries
-- Tailwind CSS
-- PDF parsing for resume ingestion
+- **Next.js** (App Router)
+- **TypeScript**
+- **OpenAI API**
+  - `text-embedding-3-small` for semantic similarity
+  - GPT for skill extraction, importance weighting, and summaries
+- **Tailwind CSS**
+- **pdf-parse** for resume PDF → text
 
-## Project Structure (Simplified)
+---
+
+## Project Structure
 
 ```
 src/
 ├── app/
-│   ├── api/
-│   │   └── analyze/
-│   │       └── route.ts        # End-to-end analysis pipeline
+│   ├── api/analyze/route.ts    # End-to-end analysis pipeline
 │   ├── analyze/                # JD + resume input UI
-│   └── result/                 # Result visualization UI
+│   ├── result/                 # Result visualization UI
+│   ├── layout.tsx, page.tsx, globals.css
 ├── lib/
-│   ├── embeddings.ts           # Embedding utilities
-│   ├── similarity.ts           # Cosine similarity helpers
-│   └── weightedScore.ts        # Scoring & weighting logic
+│   ├── embeddings.ts           # OpenAI embedding helpers
+│   ├── similarity.ts           # Cosine similarity, 0–100 normalization
+│   └── weightedScore.ts        # Scoring & required/preferred weighting
 ├── services/
+│   ├── openaiClient.ts         # OpenAI client
 │   ├── jdAnalyzer.ts           # JD skill extraction (LLM)
-│   ├── resumeAnalyzer.ts       # Resume skill extraction (LLM)
+│   ├── jdWeighting.ts         # JD skill importance weighting (LLM)
+│   ├── resumeAnalyzer.ts      # Resume skill extraction (LLM)
 │   └── summary.ts              # AI-generated fit summary
 ```
 
-## To be Added
+---
 
-- Skill importance weighting from job descriptions
+## Run Locally
+
+1. Clone and install:
+   ```bash
+   npm install
+   ```
+
+2. Create `.env.local` with your OpenAI API key:
+   ```
+   OPENAI_API_KEY=your_key_here
+   ```
+   (See `.env.example` if present.)
+
+3. Run the dev server:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000).
+
+4. **Analyze:** Upload a resume (PDF) and paste a technical job description on `/analyze`; view results on `/result`. Results are kept in session only (no persistence yet).
+
+---
+
+## To Be Added
+
 - Gap severity ranking
 - Resume tailoring recommendations
 - Interactive skill coverage visualizations
-- Persisting embeddings for faster comparisons
+- Result persistence / shareable links (v1.5)
+- (Optional) Caching embeddings for faster re-runs
+
+

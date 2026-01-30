@@ -21,6 +21,9 @@ export default function Home() {
             <p className="mt-6 max-w-2xl text-lg text-stone-600">
               Upload your resume and paste a job description to see detailed skill coverage and match analysis.
             </p>
+            <p className="mt-3 text-sm text-stone-500">
+              Optimized for technical roles and entry-level positions (internships, new grad, early career).
+            </p>
 
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
@@ -252,6 +255,13 @@ export default function Home() {
             </summary>
 
             <div className="mt-8 space-y-6">
+              {/* Scope */}
+              <div className="rounded-xl border border-stone-200 bg-stone-50/80 px-5 py-4">
+                <p className="text-sm leading-relaxed text-stone-700">
+                  JobFit is tuned for <strong>technical job descriptions</strong> and <strong>entry-level applicants</strong> (interns, new grads, early career). Results are most meaningful for these cases; it is not designed for senior or highly experienced roles.
+                </p>
+              </div>
+
               {/* Overview */}
               <div className="rounded-xl border border-stone-200 bg-stone-50/50 p-6">
                 <h3 className="mb-3 text-lg font-semibold text-stone-900">Beyond Keyword Matching</h3>
@@ -298,7 +308,7 @@ export default function Home() {
                     <ul className="space-y-2 text-sm text-stone-700">
                       <li className="flex gap-2">
                         <span className="text-coral-500">1.</span>
-                        <span>Generate embeddings for both job description and resume using OpenAI's text-embedding model</span>
+                        <span>Generate embeddings for both job description and resume using OpenAI text-embedding-3-small</span>
                       </li>
                       <li className="flex gap-2">
                         <span className="text-coral-500">2.</span>
@@ -409,7 +419,7 @@ export default function Home() {
                       <div className="rounded-lg border border-peach-200 bg-peach-50/30 p-4">
                         <p className="text-sm font-semibold text-peach-700 mb-1">Skill Match Score (weighted)</p>
                         <p className="text-sm text-stone-700">
-                          Combines required skill coverage (70% weight) and preferred skill coverage (30% weight)
+                          Combines required skill coverage (90% weight) and preferred skill coverage (10% weight)
                         </p>
                       </div>
                       <div className="rounded-lg border border-stone-200 bg-stone-50 p-4">
@@ -445,7 +455,7 @@ export default function Home() {
                     OpenAI API
                   </span>
                   <span className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700">
-                    Embeddings
+                    OpenAI Embeddings
                   </span>
                   <span className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700">
                     Tailwind CSS

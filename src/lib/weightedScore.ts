@@ -1,7 +1,7 @@
 import type { WeightedSkill } from "@/services/jdWeighting";
 
-// normalize skill string for comparison
 export function normalizeSkill(skill: string): string {
+    if (typeof skill !== "string") return "";
     const base = skill
         .toLocaleLowerCase()
         .replace(/[\(\)\[\]\{\},.]/g, "")
@@ -86,10 +86,7 @@ function computeSkillScoreWithGroups(
 //  - normalize resume skills into a set for fast lookup
 //  - count how many jdSkills are present in resumeSkills
 //  - compute score as (hit / total JD skills) * 100 and round to nearest integer
-export function computeSkillScore(
-    jdSkills: SkillItem[],
-    resumeSkillKeys: string[]
-): number {
+export function computeSkillScore(jdSkills: SkillItem[], resumeSkillKeys: string[]): number {
     if (!Array.isArray(jdSkills) || jdSkills.length === 0) return 0;
 
     const resumeSet = new Set(resumeSkillKeys ?? []);
@@ -106,10 +103,7 @@ export function computeSkillScore(
 // logic:
 //  - normalize resume skills into a set for fast lookup
 //  - filter jdSkills to only those not present in resumeSkills
-export function computeMissingSkills(
-    jdSkills: SkillItem[],
-    resumeSkillKeys: string[]
-): string[] {
+export function computeMissingSkills(jdSkills: SkillItem[], resumeSkillKeys: string[]): string[] {
     const resumeSet = new Set(resumeSkillKeys ?? []);
     return jdSkills.filter((s) => !resumeSet.has(s.key)).map((s) => s.label);
 }
@@ -207,4 +201,5 @@ export function computeImportanceWeightedScore(
 }
 
         
+
 

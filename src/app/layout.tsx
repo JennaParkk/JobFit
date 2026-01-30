@@ -118,13 +118,16 @@ export default function RootLayout({
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   <span className="rounded-lg border border-stone-200 bg-white/80 px-3 py-1 text-xs text-stone-600">
-                    AI Analysis
+                    Next.js
                   </span>
                   <span className="rounded-lg border border-stone-200 bg-white/80 px-3 py-1 text-xs text-stone-600">
-                    Embeddings
+                    TypeScript
                   </span>
                   <span className="rounded-lg border border-stone-200 bg-white/80 px-3 py-1 text-xs text-stone-600">
-                    Skill Matching
+                    OpenAI API
+                  </span>
+                  <span className="rounded-lg border border-stone-200 bg-white/80 px-3 py-1 text-xs text-stone-600">
+                    Tailwind CSS
                   </span>
                 </div>
               </div>
@@ -134,7 +137,7 @@ export default function RootLayout({
             <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-stone-200/60 pt-8 text-sm text-stone-600 md:flex-row">
               <p>JobFit by Jenna Park · Personal project</p>
               <p className="text-xs">
-                Built with Next.js, TypeScript, and AI
+                Built with Next.js, TypeScript, and OpenAI API
               </p>
             </div>
           </div>
