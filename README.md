@@ -2,7 +2,7 @@
 
 **Personal project.** A semantic matching tool that helps early-career candidates see how well their resume aligns with a technical job description and what to improve.
 
-**Live demo:** [→ Open app](https://your-deployment.vercel.app) *(replace with your Vercel URL)*
+**Live demo:** [→ Open app](https://jobfit-web.vercel.app/) 
 
 JobFit is optimized for **technical roles** (e.g. engineering, product, data) and **entry-level positions** (internships, new grad, early career). It is not designed for senior or highly experienced roles.
 
