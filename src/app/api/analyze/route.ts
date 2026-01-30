@@ -15,51 +15,16 @@ import {
     computeWeightedSkillScore,
     computeFinalMatchScore,
     computeImportanceWeightedScore,
-    type SkillItem,
 } from "@/lib/weightedScore";
+import type { SkillItem, skillGroup } from "@/lib/weightedScore";
 
 const pdfParse = require("pdf-parse/lib/pdf-parse.js");
 
 // Enable Node.js runtime for this route
 export const runtime = "nodejs";
 
-type RawSkillGroup = {
-    type: "any_of";
-    items: string[];
-};
-
-type SkillGroupItems = {
-    type: "any_of";
-    items: SkillItem[];
-};
-
-function toSkillItems(skills: string[]): SkillItem[] {
-    const items: SkillItem[] = [];
-    const seen = new Set<string>();
-
-    for (const raw of skills ?? []) {
-        const label = String(raw ?? "").trim();
-        if (!label) continue;
-
-        const key = normalizeSkill(label);
-        if (seen.has(key)) continue;
-
-        seen.add(key);
-        items.push({ label, key });
-    }
-
-    return items;
-}
-
-function buildGroupItems(groups: RawSkillGroup[]): SkillGroupItems[] {
-    return (groups ?? []).map((group) => ({
-        type: group.type,
-        items: toSkillItems(group.items ?? []),
-    }));
-}
-
 // clean JD skills by removing generic/junk skills
-function cleanJDSkills(skills: string[]): SkillItem[] {
+function cleanJDSkills(skills: string[]) {
     const junk = new Set([
         "programming languages",
         "programming language",
@@ -67,7 +32,7 @@ function cleanJDSkills(skills: string[]): SkillItem[] {
         "front end frameworks",
         "front-end frameworks",
         "frontend frameworks",
-    ].map(normalizeSkill));
+    ]);
 
     // normalize and filter out junk skills
     const cleaned = skills
@@ -76,37 +41,89 @@ function cleanJDSkills(skills: string[]): SkillItem[] {
         .map((s) => s.replace(/^familiarity with\s+/i, "").trim())
         .map((s) => s.replace(/^knowledge of\s+/i, "").trim())
         .map((s) => s.replace(/^experience in\s+/i, "").trim())
-        .filter((s) => s.length >0);
+        .filter((s) => s.length >0)
+        .filter((s) => !junk.has(normalizeSkill(s)));
+    
+    const unique = Array.from(new Map(cleaned.map((s) => [normalizeSkill(s), s])).values());
 
-    return toSkillItems(cleaned).filter((item) => !junk.has(item.key));
+    return unique;
+    
+}
+
+type RawSkillGroup = {
+    type: "any_of";
+    items: string[];
+};
+
+function normalizeGroups(groups: RawSkillGroup[]): RawSkillGroup[] {
+    return (groups ?? []).map((group) => ({
+        type: group.type,
+        items: Array.from(
+            new Set((group.items ?? []).map(normalizeSkill))
+        ),
+    }));
+}
+
+function toSkillItem(label: string): SkillItem {
+    return { label, key: normalizeSkill(label) };
+}
+
+function normalizeGroupsToSkillItems(groups: RawSkillGroup[]): skillGroup[] {
+    return (groups ?? []).map((group) => ({
+        type: group.type,
+        items: Array.from(
+            new Map(
+                (group.items ?? []).map((label) => {
+                    const key = normalizeSkill(label);
+                    return [key, { label, key }];
+                })
+            ).values()
+        ),
+    }));
 }
 
 
+const MIN_JD_LENGTH = 50;
+
 export async function POST(req: Request) {
-    const formData = await req.formData();
+    try {
+        const formData = await req.formData();
 
-    // FormData 에서 jdText와 resume 파일 추출
-    const jdText = (formData.get("jdText") as string) ?? "";
-    const resume = formData.get("resume");
+        const jdText = ((formData.get("jdText") as string) ?? "").trim();
+        const resume = formData.get("resume");
+        const resumeFile = resume instanceof File ? resume : null;
 
-    const resumeFile = resume instanceof File ? resume : null;
+        if (!jdText) {
+            return NextResponse.json(
+                { error: "Job description is required." },
+                { status: 400 }
+            );
+        }
+        if (jdText.length < MIN_JD_LENGTH) {
+            return NextResponse.json(
+                { error: "Job description is too short. Please paste the full description." },
+                { status: 400 }
+            );
+        }
+        if (!resumeFile) {
+            return NextResponse.json(
+                { error: "No resume file uploaded." },
+                { status: 400 }
+            );
+        }
 
-    if (!resumeFile) {
-        return NextResponse.json({ error: "No resume file uploaded." }, { status: 400 });
-    }
+        const buffer = Buffer.from(await resumeFile.arrayBuffer());
+        const parsed = await pdfParse(buffer);
+        const resumeText = (parsed.text ?? "").trim();
 
-    // ArrayBuffer -> Node Buffer
-    const buffer = Buffer.from(await resumeFile.arrayBuffer());
-    // PDF -> Text 변환
-    const parsed = await pdfParse(buffer);
-    const resumeText = (parsed.text ?? "").trim();
+        if (!resumeText.trim()) {
+            return NextResponse.json(
+                { error: "Failed to extract text from resume PDF." },
+                { status: 400 }
+            );
+        }
 
-
-    if (!resumeText.trim()) {
-        return NextResponse.json({ error: "Failed to extract text from resume PDF." }, { status: 400 });
-    }
-
-    // 1) embedding 기반 semantic similarity 계산
+        // 1) embedding 기반 semantic similarity 계산
     const[jdEmbedding, resumeEmbedding] = await Promise.all([
         createEmbedding(jdText),
         createEmbedding(resumeText)
@@ -131,29 +148,28 @@ export async function POST(req: Request) {
         ...(resumeAnalysis.concepts ?? []),
     ];
 
-    const resumeSkillItems = toSkillItems(resumeSkillsRaw);
-    const resumeSkills = resumeSkillItems.map((item) => item.label);
-    const resumeSkillKeys = resumeSkillItems.map((item) => item.key);
+    const resumeSkills = Array.from(
+        // key: normalized skill name, value: original skill name
+        new Map(
+            resumeSkillsRaw.map((s) => [normalizeSkill(s), s])
+        ).values()
+    );
+    const resumeSkillKeys = resumeSkills.map((s) => normalizeSkill(s));
 
     // 5) clean JD required/preferred skills
     const jdRequiredRaw = jdAnalysis.requiredSkills ?? [];
     const jdPreferredRaw = jdAnalysis.preferredSkills ?? [];
     const jdRequiredGroupsRaw = jdAnalysis.requiredGroups ?? [];
     const jdPreferredGroupsRaw = jdAnalysis.preferredGroups ?? [];
-    const jdRequiredItems = cleanJDSkills(jdRequiredRaw);
-    const jdPreferredItems = cleanJDSkills(jdPreferredRaw);
-    const jdRequiredGroupItems = buildGroupItems(jdRequiredGroupsRaw);
-    const jdPreferredGroupItems = buildGroupItems(jdPreferredGroupsRaw);
-    const jdRequired = jdRequiredItems.map((item) => item.label);
-    const jdPreferred = jdPreferredItems.map((item) => item.label);
-    const jdRequiredGroups = jdRequiredGroupItems.map((group) => ({
-        type: group.type,
-        items: group.items.map((item) => item.label),
-    }));
-    const jdPreferredGroups = jdPreferredGroupItems.map((group) => ({
-        type: group.type,
-        items: group.items.map((item) => item.label),
-    }));
+    const jdRequired = cleanJDSkills(jdRequiredRaw);
+    const jdPreferred = cleanJDSkills(jdPreferredRaw);
+    const jdRequiredGroups = normalizeGroups(jdRequiredGroupsRaw);
+    const jdPreferredGroups = normalizeGroups(jdPreferredGroupsRaw);
+
+    const jdRequiredItems = jdRequired.map(toSkillItem);
+    const jdPreferredItems = jdPreferred.map(toSkillItem);
+    const jdRequiredGroupItems = normalizeGroupsToSkillItems(jdRequiredGroupsRaw);
+    const jdPreferredGroupItems = normalizeGroupsToSkillItems(jdPreferredGroupsRaw);
 
     // 6) Missing Skills
     const missingRequired = computeMissingSkills(jdRequiredItems, resumeSkillKeys);
@@ -166,7 +182,7 @@ export async function POST(req: Request) {
         requiredGroups: jdRequiredGroupItems,
         preferredGroups: jdPreferredGroupItems,
         resumeSkillKeys,
-        requiredWeight: 0.8, // 80% weight to required skills
+        requiredWeight: 0.9, // 80% weight to required skills
     });
 
     // compute weighted skill score 
@@ -243,6 +259,12 @@ export async function POST(req: Request) {
         },
 
         summary: `Received JD (${jdText.length} chars). Extracted resume text length: ${resumeText.length} chars.`,
-    }); 
-
+    });
+    } catch (err) {
+        console.error("Analyze route error:", err);
+        return NextResponse.json(
+            { error: "Analysis failed. Please try again." },
+            { status: 500 }
+        );
+    }
 }

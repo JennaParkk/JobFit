@@ -1,124 +1,137 @@
 # System Design & Algorithm Notes
-Design document describing the reasoning, architecture, and algorithms behind JobFit.
 
-## 1. Purpose of This Document
-JobFit is more than a keyword matcher.
-It is a semantic, multi-signal evaluation system designed to help early‑career candidates understand:
+Design document describing the reasoning, architecture, and algorithms behind JobFit (personal project).
 
-- how well their resume aligns with a job description
-- why the match score is what it is
-- what specific skills they should improve next
+---
 
-This document explains why certain algorithms were chosen, and how the system can evolve.
+## 1. Problem Statement
 
-## 2. Problem Statement
 Early-career candidates (students, interns, recent graduates) often struggle to evaluate how well their resume matches a job description.
 
-More existing tools rely on
+Many existing tools rely on:
 - keyword matching
 - ATS-style filtering
-- apaque "match scores" with no explanation
+- opaque "match scores" with no explanation
 
 These approaches often fail to:
-- captier semantic relevance when wording differs
-- explain why a candidate is a week or strong match
+- capture semantic relevance when wording differs
+- explain why a candidate is a weak or strong match
 - provide actionable insight for improvement
 
-Goal:
-Design a system that helps early-career candidates understand how and why their resume aligns (or doesn't) with a job description.
+**Goal:** Design a system that helps early-career candidates understand how and why their resume aligns (or doesn’t) with a job description.
 
-Primary target users:
+**Primary target users:**
 - College students
 - Internship applicants
-- Recent graduates/early-career engineers
+- Recent graduates / early-career engineers
 
-Rationale:
-- Resume tend to be skill-heavy and experience-light
-- Keyword coverage matter more than nuanced career trajectories
+**Rationale:**
+- Resumes tend to be skill-heavy and experience-light.
+- Keyword coverage matters more than nuanced career trajectories for this segment.
 
-Non-goals (for now):
+**Non-goals (for now):**
 - Senior-level role evaluation
 - Recency weighting across long career timelines
 - Domain-specific seniority heuristics
 
-This scope decision keeps the system interpretable and avoid overfitting to senior hiring patterns.
+This scope keeps the system interpretable and avoids overfitting to senior hiring patterns.
+
+---
+
+## 2. Scope
+
+JobFit is built for:
+- **Technical job descriptions only** (e.g. engineering, product, data). Results are most meaningful when the JD is technical.
+- **Entry-level applicants** (interns, new grads, early career). It is not tuned for senior or highly experienced roles.
+
+Non-technical JDs or senior-level resumes are out of scope for the current design.
+
+---
 
 ## 3. High-Level Architecture
-Intentionally separates semantic similarity, skill-level matching, and LLM reasoning so each signal remains interpretable and tunable.
+
+The system intentionally separates:
+- semantic similarity (embeddings),
+- skill-level matching (extraction + weighting),
+- and LLM reasoning (summaries),
+
+so each signal stays interpretable and tunable.
+
+---
 
 ## 4. Core Concepts & Features
+
 ### Semantic Similarity (Embeddings)
-Why embeddings? 
-captures conceptual alignment, not just shared terms.
 
-1. Generate embeddings for
-    - full job description
-    - full resume text
-2. Compute cosine similarity between embeddigs
-3. Normalize similarity into a 0-100 score
+**Why embeddings?** They capture conceptual alignment, not just shared terms.
 
-This captures conceptual alignment, not just shared terms.
-This captures cases like:
-- JD: “React experience required”
-- Resume: “Built SPAs with modern frontend frameworks”
-Even without the word “React,” the meaning is similar.
+1. Generate embeddings for the full job description and full resume text (OpenAI `text-embedding-3-small`).
+2. Compute cosine similarity between the embeddings.
+3. Normalize similarity into a 0–100 score.
 
-Limitation:
-- Less interpretable without explanation
-- Does not indicate which skills are missing
-Therefore combited with skill match score to avoid over-reliance on single metric.
+Example: JD says “React experience required”; resume says “Built SPAs with modern frontend frameworks.” The meaning aligns even without the word “React.”
+
+**Limitation:** Embeddings alone don’t indicate which specific skills are missing. Hence combined with skill match score to avoid over-reliance on a single metric.
 
 ### Skill Extraction & Matching
-Uses LLM to extract:
+
+Uses an LLM to extract:
 - required skills
-- preferred skills
+- preferred skills  
+(and optional “any-of” groups)
+
 from the job description and resume independently.
 
-Why LLM instead of regex?
-- JD phrasing varies wildly
-- Skills appear in responsibilities, qualifications, or even company culture sections
-- LLMs understand context (“frontend-focused role” → React/TS implied)
+**Why LLM instead of regex?**
+- JD phrasing varies wildly.
+- Skills appear in responsibilities, qualifications, or culture sections.
+- LLMs understand context (e.g. “frontend-focused role” → React/TS implied).
 
-Skills are normalized to reduce
+Skills are normalized to reduce:
 - casing differences
 - punctuation variation
-- minor phrasing inconsistences
+- minor phrasing inconsistencies
 
 ### JD Importance Weighting & Skill Score
-Not all skills in a JD are equally important.
-JobFit assigns importance (0–1) using:
-- linguistic cues (“must”, “required”, “preferred”)
-- position in JD (first 20% = more important)
-- frequency
-- contextual cues (e.g., “frontend role” → React ↑)
 
-Why importance matters:  
-It prevents “nice-to-have” skills from dragging down the score and highlights what truly matters.
+Not all skills in a JD are equally important. JobFit assigns importance (0–1) using:
+- linguistic cues (“must”, “required”, “preferred”)
+- position in the JD (e.g. first 20% weighted higher)
+- frequency
+- contextual cues (e.g. “frontend role” → React ↑)
+
+**Why it matters:** It prevents “nice-to-have” skills from dragging down the score and highlights what truly matters.
+
+**Implementation:** Required vs preferred skill match is combined with 90% weight on required and 10% on preferred; this is then blended with importance-weighted coverage.
 
 ### LLM-Generated Summary
-Purpose: Numbers alone don't explain why a candidate is or isn't a fit.
 
-The system generates structured JSON:
+**Purpose:** Numbers alone don’t explain why a candidate is or isn’t a fit.
+
+The system produces structured output (e.g. JSON) with:
 - strengths
 - gaps
 - overall fit (short phrase)
+
 LLMs are used after scoring, not as the sole decision-maker.
 
 ### Scoring System
-produces multiple interpretable scores:
-- semantic score (0-100)
-- skill match score (weighted combination of required skill match & preferred skill match)
-- final match score (blend of semantic + skill signals)
+
+The pipeline produces multiple interpretable scores:
+- **Semantic score (0–100):** embedding-based conceptual alignment.
+- **Skill match score:** weighted combination of required (90%) and preferred (10%) match, with JD importance weighting.
+- **Final match score:** blend of semantic and skill signals (e.g. 50% semantic, 50% skill).
+
+---
 
 ## 5. Design Principles
-### Modularity 
-Each step is isolated to make the system easy to tune and extend.
+
+### Modularity
+
+Each step (embeddings, similarity, JD analysis, resume analysis, importance weighting, summary) is isolated so the system is easy to tune and extend.
 
 ### UI Design Goals
-- clarity over density
-- explanation over judgement
-- actionable insight over pass/fail labeling
 
-
-
-
+- Clarity over density
+- Explanation over judgement
+- Actionable insight over pass/fail labeling

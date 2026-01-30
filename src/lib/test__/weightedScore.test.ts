@@ -7,6 +7,7 @@ import {
     computeWeightedSkillScore,
     computeFinalMatchScore,
 } from "@/lib/weightedScore";
+import type { skillGroup } from "@/lib/weightedScore";
 
 describe ("normalizeSkill", () => {
     it("normalizes casing, punctuation, and spcaing", () => {
@@ -99,7 +100,7 @@ describe("computeWeightedSkillScore", () => {
 
     it("supports any_of groups (if you have any skill in the group, it counts as a hit)", () => {
         const required = [{ label: "React", key: "react" }];
-        const requiredGroups = [
+        const requiredGroups: skillGroup[] = [
             {
                 type: "any_of",
                 items: [
