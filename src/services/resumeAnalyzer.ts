@@ -48,6 +48,7 @@ export async function extractSkillsFromResume(resumeText: string): Promise<Resum
 
     const res = await openai.chat.completions.create({
         model: "gpt-4o-mini",
+        temperature: 0,
         messages: [{ role: "user", content: prompt }],
     });
     const raw = res.choices[0].message.content ?? "{}";
